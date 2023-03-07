@@ -20,16 +20,7 @@ class Prefetcher:
          for j in range (0,m):
             self.DPTs[i].append(DPTEntry(None, [None] * (n+1)))
             
-   def prefetch(self, adress):
-      new_dalta = adress - self.last_adress
-      
-      tmp = self.last_deltas
-      
-      for i in range (0, self.n):
-         self.last_deltas[i] = tmp[i+1]
-   
-      self.last_deltas[self.n-1] = new_dalta
-      
+   def __find_next_delta(self):
       for ib in range (self.n-1, -1): #Itterate over DPTs
          i = self.n - ib - 1 #i -> n-1, n-2, n-3 ... 0
          found = True
@@ -52,15 +43,34 @@ class Prefetcher:
                
                if (self.DPTs[i][j].delatas[k] != self.last_deltas[k+i]):
                   found = False
-              
-            if found:
-               break
-             
-         if found:
-            break  
+                  
+            if (found):
+               return True, next_delta
+               self.DPTs[i][j].LRU += 1 #Update Lru
+      
+      return False, 0
+      
+            
+   def prefetch(self, adress):
+      new_dalta = adress - self.last_adress
+      
+      tmp = self.last_deltas
+      
+      for i in range (0, self.n):
+         self.last_deltas[i] = tmp[i+1]
+   
+      self.last_deltas[self.n-1] = new_dalta
+      
+      valid, next_delta  = self.__find_next_delta()
+      
+      #Uppdate deltas
+      
+      if (not valid):
+         print("Nothing to prefetch!")
+         return
                    
       self.last.adress =  adress
-      return next_adress 
+      return next_delta + adress
    
 if __name__ == '__main__':
    #prefetcher = Prefetcher(4, 64)
