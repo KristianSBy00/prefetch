@@ -19,10 +19,7 @@ class Prefetcher:
          self.DPTs.append([])
          for j in range (0,m):
             
-            deltas = []
-            
-            for k in range(0, i+1):
-               deltas.append(None)
+            deltas = [None] * self.n
             
             self.DPTs[i].append(DPTEntry(None, deltas))
             
@@ -52,7 +49,7 @@ class Prefetcher:
       for i in range(0, self.n):
          victem = 0
          
-         delta_seqence = []
+         delta_seqence = [None] * self.n
          
          #n = 4
          # i = 0: b = [0],          append = 3,          diff = 3  n - 1- i
@@ -62,7 +59,7 @@ class Prefetcher:
          
          
          for b in range (0, i+1):
-            delta_seqence.append(raw_delta_sequence[b + self.n - 1 - i])
+            delta_seqence[b + self.n - 1 - i] = raw_delta_sequence[b + self.n - 1 - i]
          
          for j in range (1, self.m):
             if (self.DPTs[i][j].LRU > self.DPTs[i][victem].LRU):
@@ -79,9 +76,9 @@ class Prefetcher:
       
       for ib in range (0, self.n): #Itterate over DPTs
          i = self.n - ib - 1 #i -> n-1, n-2, n-3 ... 0,    3, 2, 1, 0
-         found = True
          
          for j in range (0, self.m): #Itterate over #DPTS entires
+            found = True
             for k in range(0, i+1): #Itterate over deltas in DPTS entire k -> 0,1,2,3 : 0,1,2 : 0,1 : 0
                
                #i is the table number, there are i+1 entries
@@ -94,8 +91,9 @@ class Prefetcher:
                
                #print(f"i: {i}, ib: {ib}, j: {j}, k: {k}, offset_k: {k+ib}")
                #print(self.DPTs[i][j].delatas)
-               print(f"entry deltas: {self.DPTs[i][j].delatas}")
-               if (self.DPTs[i][j].delatas[k] != delta_seq[k+ib]):
+               print(f"entry deltas: {self.DPTs[i][j].delatas}, next: {self.DPTs[i][j].prediction}")
+               #print(f"comp: {self.DPTs[i][j].delatas[k+ib]} and {delta_seq[k+ib]}")
+               if (self.DPTs[i][j].delatas[k+ib] != delta_seq[k+ib]):
                   found = False
                   
             if found: 
@@ -150,9 +148,12 @@ if __name__ == '__main__':
    found, next_delta = prefetcher.prefetch(1)
    found, next_delta = prefetcher.prefetch(2)
    found, next_delta = prefetcher.prefetch(3)
+   
    found, next_delta = prefetcher.prefetch(1)
    found, next_delta = prefetcher.prefetch(2)
+   
    found, next_delta = prefetcher.prefetch(3)
-
+   found, next_delta = prefetcher.prefetch(5)
+   found, next_delta = prefetcher.prefetch(7)
    if found:
       print(next_delta)
