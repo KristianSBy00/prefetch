@@ -164,12 +164,12 @@ int main() {
    prefetched = prefetch(2);
    prefetched = prefetch(3);
 
+   prefetched = prefetch(100);
+   prefetched = prefetch(110);
+   prefetched = prefetch(120);
+
    prefetched = prefetch(1);
    prefetched = prefetch(2);
-
-   prefetched = prefetch(3);
-   prefetched = prefetch(5);
-   prefetched = prefetch(7);
 
    if (prefetched.valid){
       printf("Next: %d\n", prefetched.value);

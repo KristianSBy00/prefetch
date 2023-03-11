@@ -19,14 +19,14 @@ class Prefetcher:
          self.DPTs.append([])
          for j in range (0,m):
             
-            deltas = [None] * self.n
+            deltas = [None] * self.m
             
             self.DPTs[i].append(DPTEntry(None, deltas))
             
             
    def __uppdate_LRU(self, finds):
       for i in range(0, self.n):
-         for j in range(0, self.n):
+         for j in range(0, self.m):
             self.DPTs[i][j].LRU += 1
             
       for i, j in finds: 
@@ -144,16 +144,16 @@ class Prefetcher:
       return True, next_delta + adress
    
 if __name__ == '__main__':
-   prefetcher = Prefetcher(4, 4)
+   prefetcher = Prefetcher(4, 8)
    found, next_delta = prefetcher.prefetch(1)
    found, next_delta = prefetcher.prefetch(2)
    found, next_delta = prefetcher.prefetch(3)
    
+   found, next_delta = prefetcher.prefetch(100)
+   found, next_delta = prefetcher.prefetch(110)
+   found, next_delta = prefetcher.prefetch(120)
+   
    found, next_delta = prefetcher.prefetch(1)
    found, next_delta = prefetcher.prefetch(2)
-   
-   found, next_delta = prefetcher.prefetch(3)
-   found, next_delta = prefetcher.prefetch(5)
-   found, next_delta = prefetcher.prefetch(7)
    if found:
       print(next_delta)
