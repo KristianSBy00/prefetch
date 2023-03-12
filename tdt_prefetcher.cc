@@ -68,7 +68,8 @@ TDTPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
     int adress_to_get = VLDP_prefetch(int(access_addr));
 
     // Next line prefetching
-    addresses.push_back(AddrPriority(access_addr + blkSize, 0));
+    //addresses.push_back(AddrPriority(access_addr + blkSize, 0));
+    addresses.push_back(AddrPriority(adress_to_get, 0));
 
     // Get matching storage of entries
     // Context is 0 due to single-threaded application
