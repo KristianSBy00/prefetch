@@ -5,6 +5,8 @@ int last_deltas[n];
 int new_delta_seq[n];
 struct DPTEntry DPTs[n][m];
 
+int page_counter = 0;
+
 unsigned int calculate_opt_adress(unsigned int addr, int delta);
 
 //create global direct mapped OPT cache table
@@ -130,7 +132,8 @@ struct prediction prefetch_delta(int adress){
    //Might need more gurding
    if ( (next_delta_prediction.valid == 0) ){
       printf("Nothing to prefetch, do dsiplacment insted!\n");
-      return pred;
+      //return pred;
+      return 0;
    }
 
    pred.valid = 1;
@@ -142,7 +145,7 @@ struct prediction prefetch_delta(int adress){
 int calculate_opt_adress(unsigned int addr)
 {
     //delta unused
-    int calced_addr;
+    int calced_addr = 0;
 
     static unsigned char block_access = 0;
 
@@ -209,20 +212,26 @@ int calculate_opt_adress(unsigned int addr)
     return calced_addr;
 }
 
-int VLDP_prefetch(int adress){
+unsigned int VLDP_prefetch(int adress){
 
    int next_delta;
    
+   //Always returns 0 on first 3 acceses!
    next_delta = prefetch_delta(adress);
 
    if (next_delta != 0){
-      return next_delta;
+      return adress + next_delta;
    }
 
-   next_delta = calculate_opt_adress(adress);
+   next_delta = calculate_opt_adress(adress); 
 
-   return next_delta;
-   
+   if (next_delta != 0){
+      return adress + next_delta;
+   }
+
+   //Remember to mke sure we dont acces adress that is to larege!!!!
+
+   return adress+1;
 
 }
 
