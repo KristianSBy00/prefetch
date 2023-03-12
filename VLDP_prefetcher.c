@@ -98,7 +98,7 @@ struct prediction find_next_delta(int delta_seq[]){
 }
 
 
-struct prediction prefetch(int adress){
+struct prediction prefetch_delta(int adress){
    struct prediction pred;
    pred.valid = 0;
    pred.value = 0;
@@ -139,10 +139,10 @@ struct prediction prefetch(int adress){
    return pred;
 }
 
-unsigned int calculate_opt_adress(unsigned int addr, int delta)
+int calculate_opt_adress(unsigned int addr)
 {
     //delta unused
-    unsigned int calced_addr;
+    int calced_addr;
 
     static unsigned char block_access = 0;
 
@@ -207,6 +207,23 @@ unsigned int calculate_opt_adress(unsigned int addr, int delta)
 
     //return prefetchable addr(OFFSET!)
     return calced_addr;
+}
+
+int VLDP_prefetch(int adress){
+
+   int next_delta;
+   
+   next_delta = prefetch_delta(adress);
+
+   if (next_delta != 0){
+      return next_delta;
+   }
+
+   next_delta = calculate_opt_adress(adress);
+
+   return next_delta;
+   
+
 }
 
 int main() {
