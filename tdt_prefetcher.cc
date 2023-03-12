@@ -64,6 +64,9 @@ TDTPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
     Addr access_pc = pfi.getPC();
     int context = 0;
 
+
+    int adress_to_get = VLDP_prefetch(int(access_addr));
+
     // Next line prefetching
     addresses.push_back(AddrPriority(access_addr + blkSize, 0));
 
