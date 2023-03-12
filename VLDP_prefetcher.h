@@ -4,8 +4,8 @@
 #include <math.h>    
 
 //in bytes
-#define BLOCK_SIZE              8 * 131072u
-#define MAIN_MEMORY_SIZE        8 * 8388608u
+#define BLOCK_SIZE              131072u
+#define MAIN_MEMORY_SIZE        8388608u
 #define opt_entry_num           MAIN_MEMORY_SIZE/BLOCK_SIZE //=> 64
 
 #define OPT_ENTRY_ACCURATE      1u

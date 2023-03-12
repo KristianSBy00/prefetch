@@ -262,7 +262,7 @@ unsigned int VLDP_prefetch(int adress){
 
 }
 
-/*
+
 int main() {
    int prefetched;
 
@@ -295,4 +295,3 @@ int main() {
 
    return 0;
 }
-*/
