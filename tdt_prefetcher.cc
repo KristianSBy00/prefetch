@@ -4,6 +4,10 @@
 #include "mem/cache/replacement_policies/base.hh"
 #include "params/TDTPrefetcher.hh"
 
+extern "C"{
+    #include "VLDP_prefetcher.h"
+}
+
 namespace gem5
 {
 

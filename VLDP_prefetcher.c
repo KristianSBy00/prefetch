@@ -9,8 +9,6 @@ int page_counter = 0;
 
 int my_previous_tag = -1;
 
-int calculate_opt_adress(unsigned int addr);
-
 //create global direct mapped OPT cache table
 struct opt_table OPT_prefetch[opt_entry_num];
 
@@ -264,6 +262,7 @@ unsigned int VLDP_prefetch(int adress){
 
 }
 
+/*
 int main() {
    int prefetched;
 
@@ -296,3 +295,4 @@ int main() {
 
    return 0;
 }
+*/

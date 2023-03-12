@@ -39,3 +39,11 @@ struct opt_table
     int delta;
     unsigned char accuracy;
 };
+
+int calculate_opt_adress(unsigned int addr);
+void update_LRU(struct entry finds[]);
+void nuke_DPTs();
+void update_deltas(int next_delta, int raw_delta_sequence[]);
+struct prediction find_next_delta(int delta_seq[]);
+int prefetch_delta(int adress);
+unsigned int VLDP_prefetch(int adress);
