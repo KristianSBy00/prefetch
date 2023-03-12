@@ -7,7 +7,9 @@ struct DPTEntry DPTs[n][m];
 
 int page_counter = 0;
 
-unsigned int calculate_opt_adress(unsigned int addr, int delta);
+int my_previous_tag = -1;
+
+int calculate_opt_adress(unsigned int addr);
 
 //create global direct mapped OPT cache table
 struct opt_table OPT_prefetch[opt_entry_num];
@@ -25,6 +27,20 @@ void update_LRU(struct entry finds[]){
    }
 }
 
+
+void nuke_DPTs(){
+   printf("Nuke go BOOOM!!\n");
+
+   for(int i = 0; i < n; i++){
+      last_deltas[i] = 0;
+      new_delta_seq[i] = 0;
+      struct DPTEntry fresh_new;
+
+      for(int j = 0; j < m; j++){
+         DPTs[i][j] = fresh_new;
+      } 
+   }
+}
 
 void update_deltas(int next_delta, int raw_delta_sequence[]){
    for(int i = 0; i < n; i++){
@@ -100,15 +116,22 @@ struct prediction find_next_delta(int delta_seq[]){
 }
 
 
-struct prediction prefetch_delta(int adress){
-   struct prediction pred;
-   pred.valid = 0;
-   pred.value = 0;
+int prefetch_delta(int adress){
+
+   int tmp_Tag = adress >> (int)log2(BLOCK_SIZE);
+   tmp_Tag = tmp_Tag >> (int)log2(opt_entry_num);
+
+   //first access of the page
+   if(tmp_Tag != my_previous_tag){
+      nuke_DPTs();
+   }
+
+   my_previous_tag = tmp_Tag;
 
    if (last_adress == -1){
       printf("Initializing prefetcher!\n");
       last_adress = adress;
-      return pred;
+      return 0;
    }
 
    int new_delta = adress - last_adress;
@@ -131,15 +154,12 @@ struct prediction prefetch_delta(int adress){
 
    //Might need more gurding
    if ( (next_delta_prediction.valid == 0) ){
-      printf("Nothing to prefetch, do dsiplacment insted!\n");
+      //printf("Nothing to prefetch, do dsiplacment insted!\n");
       //return pred;
       return 0;
    }
 
-   pred.valid = 1;
-   pred.value = next_delta_prediction.value + adress;
-
-   return pred;
+   return next_delta_prediction.value;
 }
 
 int calculate_opt_adress(unsigned int addr)
@@ -214,20 +234,25 @@ int calculate_opt_adress(unsigned int addr)
 
 unsigned int VLDP_prefetch(int adress){
 
-   int next_delta;
+
+   int next_delta_DPT;
+   int next_delta_OPT;
    
    //Always returns 0 on first 3 acceses!
-   next_delta = prefetch_delta(adress);
+   next_delta_DPT = prefetch_delta(adress);
+   next_delta_OPT = calculate_opt_adress(adress); 
 
-   if (next_delta != 0){
-      return adress + next_delta;
+   if (next_delta_OPT != 0){
+      printf("Sending result from opt\n");
+      return adress + next_delta_OPT;
+   }
+   if (next_delta_DPT != 0){
+      printf("Sending result from delta\n");
+      printf("The next from DPTs is: %d\n", next_delta_DPT);
+      return adress + next_delta_DPT;
    }
 
-   next_delta = calculate_opt_adress(adress); 
-
-   if (next_delta != 0){
-      return adress + next_delta;
-   }
+   
 
    //Remember to mke sure we dont acces adress that is to larege!!!!
 
@@ -236,22 +261,34 @@ unsigned int VLDP_prefetch(int adress){
 }
 
 int main() {
-   struct prediction prefetched;
+   int prefetched;
 
-   prefetched = prefetch(1);
-   prefetched = prefetch(2);
-   prefetched = prefetch(3);
+   prefetched = VLDP_prefetch(1);
+   prefetched = VLDP_prefetch(2);
+   prefetched = VLDP_prefetch(4);
 
-   prefetched = prefetch(100);
-   prefetched = prefetch(110);
-   prefetched = prefetch(120);
+   prefetched = VLDP_prefetch(10000000);
+   prefetched = VLDP_prefetch(10000010);
+   prefetched = VLDP_prefetch(10000020);
 
-   prefetched = prefetch(1);
-   prefetched = prefetch(2);
+   prefetched = VLDP_prefetch(1);
+   prefetched = VLDP_prefetch(2);
 
-   if (prefetched.valid){
-      printf("Next: %d\n", prefetched.value);
-   }
+   prefetched = VLDP_prefetch(10000000);
+   prefetched = VLDP_prefetch(10000010);
+   prefetched = VLDP_prefetch(10000020);
+
+   prefetched = VLDP_prefetch(1);
+   prefetched = VLDP_prefetch(2);
+
+   printf("Switching page!\n");
+
+   prefetched = VLDP_prefetch(10000000);
+   printf("Next: %d\n", prefetched);
+   prefetched = VLDP_prefetch(10000010);
+   prefetched = VLDP_prefetch(10000020);
+
+   printf("Next: %d\n", prefetched);
 
    return 0;
 }
