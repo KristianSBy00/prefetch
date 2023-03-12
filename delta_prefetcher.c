@@ -2,7 +2,8 @@
 #include <stdlib.h>
 
 #define n 4
-#define m 4
+#define m 8
+#define p 64
 
 struct DPTEntry {
   int prediction;
@@ -157,7 +158,6 @@ struct prediction prefetch(int adress){
 }
 
 int main() {
-   printf("Hello!\n");
    struct prediction prefetched;
 
    prefetched = prefetch(1);
@@ -170,9 +170,6 @@ int main() {
 
    prefetched = prefetch(1);
    prefetched = prefetch(2);
-
-   prefetched = prefetch(100);
-   prefetched = prefetch(110);
 
    if (prefetched.valid){
       printf("Next: %d\n", prefetched.value);
