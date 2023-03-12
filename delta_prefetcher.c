@@ -171,6 +171,9 @@ int main() {
    prefetched = prefetch(1);
    prefetched = prefetch(2);
 
+   prefetched = prefetch(100);
+   prefetched = prefetch(110);
+
    if (prefetched.valid){
       printf("Next: %d\n", prefetched.value);
    }

@@ -52,20 +52,6 @@ TDTPrefetcher::allocateNewContext(int context)
     return &(insertion_result.first->second);
 }
 
-struct DPTEntry {
-  int next_delta;
-  int prev_delatas[];
-};
-
-//Global variables
-
-
-int n = 4; //Number of delta prediction tables
-int m = 64; //Number of entries in delta predicton tables
-DPTEntry DPTs[n][m][]; //Delta predicton tables
-Addr last_adress = void;
-int last_deltas[n];
-
 void
 TDTPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
                                  std::vector<AddrPriority> &addresses)
@@ -73,41 +59,6 @@ TDTPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
     Addr access_addr = pfi.getAddr();
     Addr access_pc = pfi.getPC();
     int context = 0;
-
-    last_deltas[n];
-    tmp[n]
-
-    for(int i = 0; i < n-1; i++){
-        tmp[i] = last_deltas[i+1];
-    }
-    int current_delta = access_addr - last_adress;
-    tmp[n-1] = last_adress;
-
-    last_deltas = tmp;
-
-    for (int i = 0; i < n; i++ ){
-        DPTs[i] = [i+1];
-    }
-
-    int next_delta = void;
-
-    for(int i = n; i > 0; i--){
-        for(int j = 0; j < m; j++){
-
-            found = true;
-
-            for (int k = 0; k < i; k++){
-                if (DPTs[i][j].prev_delatas[k] != last_deltas[k]){
-                    found = false;
-                }
-            }
-            if (found && (next_delta == void)){
-                next_delta = DPTs[i][j].next_delta;
-            }
-        }
-    }
-
-    int prefetc_addr = access_addr + next_delta;
 
     // Next line prefetching
     addresses.push_back(AddrPriority(access_addr + blkSize, 0));
@@ -132,7 +83,6 @@ TDTPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
     TDTEntry* victim = pcTable->findVictim(access_pc);
     victim->lastAddr = access_addr;
     pcTable->insertEntry(access_pc, false, victim);
-    last_adress = access_addr;
 }
 
 uint32_t
