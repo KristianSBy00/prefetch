@@ -237,26 +237,30 @@ unsigned int VLDP_prefetch(int adress){
 
    int next_delta_DPT;
    int next_delta_OPT;
+   unsigned int addr_out;
    
    //Always returns 0 on first 3 acceses!
    next_delta_DPT = prefetch_delta(adress);
    next_delta_OPT = calculate_opt_adress(adress); 
 
+   addr_out = adress + 1;
+
    if (next_delta_OPT != 0){
       printf("Sending result from opt\n");
-      return adress + next_delta_OPT;
+      //return adress + next_delta_OPT;
+      addr_out =adress + next_delta_OPT;
    }
    if (next_delta_DPT != 0){
       printf("Sending result from delta\n");
       printf("The next from DPTs is: %d\n", next_delta_DPT);
-      return adress + next_delta_DPT;
+      //return adress + next_delta_DPT;
+      addr_out = adress + next_delta_DPT;
    }
-
    
 
    //Remember to mke sure we dont acces adress that is to larege!!!!
 
-   return adress+1;
+   return addr_out;
 
 }
 
