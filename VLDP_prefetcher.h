@@ -4,8 +4,8 @@
 #include <math.h>    
 
 //in bytes
-#define BLOCK_SIZE              131072u
-#define MAIN_MEMORY_SIZE        8388608u
+#define BLOCK_SIZE              134217728u
+#define MAIN_MEMORY_SIZE        8589934592u
 #define opt_entry_num           MAIN_MEMORY_SIZE/BLOCK_SIZE //=> 64
 
 #define OPT_ENTRY_ACCURATE      1u
@@ -46,4 +46,4 @@ void nuke_DPTs();
 void update_deltas(int next_delta, int raw_delta_sequence[]);
 struct prediction find_next_delta(int delta_seq[]);
 int prefetch_delta(int adress);
-unsigned int VLDP_prefetch(int adress);
+unsigned long VLDP_prefetch(unsigned long adress);

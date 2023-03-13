@@ -160,7 +160,7 @@ int prefetch_delta(int adress){
    return next_delta_prediction.value;
 }
 
-int calculate_opt_adress(unsigned int addr)
+int calculate_opt_adress(unsigned long addr)
 {
     //delta unused
     int calced_addr = 0;
@@ -230,12 +230,12 @@ int calculate_opt_adress(unsigned int addr)
     return calced_addr;
 }
 
-unsigned int VLDP_prefetch(int adress){
+unsigned long VLDP_prefetch(unsigned long adress){
 
 
    int next_delta_DPT;
    int next_delta_OPT;
-   unsigned int addr_out;
+   unsigned long addr_out;
    
    //Always returns 0 on first 3 acceses!
    next_delta_DPT = prefetch_delta(adress);
@@ -263,7 +263,7 @@ unsigned int VLDP_prefetch(int adress){
 }
 
 
-int main() {
+/*int main() {
    int prefetched;
 
    prefetched = VLDP_prefetch(1);
@@ -295,3 +295,4 @@ int main() {
 
    return 0;
 }
+*/
