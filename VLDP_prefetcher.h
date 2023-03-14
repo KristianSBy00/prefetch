@@ -16,34 +16,35 @@
 #define p 64
 
 struct DPTEntry {
-  int prediction;
-  int LRU;
-  int delatas[n];
+  long prediction;
+  long LRU;
+  long delatas[n];
 };
 
 
 struct entry {
-  int valid;
-  int i;
-  int j;
+  long valid;
+  long i;
+  long j;
 };
 
 struct prediction {
-  int valid;
-  int value;
+  long valid;
+  long value;
 };
 
 struct opt_table
 {
-    unsigned int Tag;
-    int delta;
+    unsigned long Tag;
+    long delta;
     unsigned char accuracy;
 };
 
-int calculate_opt_adress(unsigned int addr);
+long calculate_opt_adress(unsigned long addr);
 void update_LRU(struct entry finds[]);
 void nuke_DPTs();
-void update_deltas(int next_delta, int raw_delta_sequence[]);
-struct prediction find_next_delta(int delta_seq[]);
-int prefetch_delta(int adress);
+void update_deltas(long next_delta, long raw_delta_sequence[]);
+struct prediction find_next_delta(long delta_seq[]);
+long prefetch_delta(long adress);
 unsigned long VLDP_prefetch(unsigned long adress);
+unsigned long mylog2 (unsigned long val);
