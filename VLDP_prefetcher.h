@@ -12,13 +12,14 @@
 #define OPT_ENTRY_INACCURATE    0u
 
 #define n 4
-#define m 8
+#define m 1024
 #define p 64
 
 struct DPTEntry {
   int prediction;
   int LRU;
   int delatas[n];
+  int page_num;
 };
 
 
@@ -40,10 +41,11 @@ struct opt_table
     unsigned char accuracy;
 };
 
-int calculate_opt_adress(unsigned int addr);
+int calculate_opt_adress(unsigned long addr);
 void update_LRU(struct entry finds[]);
 void nuke_DPTs();
-void update_deltas(int next_delta, int raw_delta_sequence[]);
-struct prediction find_next_delta(int delta_seq[]);
-int prefetch_delta(int adress);
+void update_deltas(int page_num, int next_delta, int raw_delta_sequence[]);
+struct prediction find_next_delta(int page_num, int delta_seq[]);
+int prefetch_delta(unsigned long adress);
 unsigned long VLDP_prefetch(unsigned long adress);
+unsigned long DPTH_prefetch(unsigned long adress);

@@ -59,15 +59,25 @@ void
 TDTPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
                                  std::vector<AddrPriority> &addresses)
 {
-    /*Addr access_addr = pfi.getAddr();
+    
+    Addr access_addr = pfi.getAddr();
     Addr access_pc = pfi.getPC();
     int context = 0;
 
-    unsigned long adress_to_get = VLDP_prefetch(long(access_addr));
+    unsigned long adress_to_get = DPTH_prefetch(long(access_addr));
+
+    if ( adress_to_get == access_addr){
+        addresses.push_back(AddrPriority(access_addr + blkSize, 0));
+    }
+    else{
+        addresses.push_back(AddrPriority((Addr)adress_to_get, 0));
+    }
 
     // Next line prefetching
     //addresses.push_back(AddrPriority(access_addr + blkSize, 0));
-    addresses.push_back(AddrPriority((Addr)adress_to_get, 0));
+    //addresses.push_back(AddrPriority((Addr)adress_to_get, 0));
+
+
 
     // Get matching storage of entries
     // Context is 0 due to single-threaded application
@@ -88,7 +98,7 @@ TDTPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
     // Find replacement victim, update info
     TDTEntry* victim = pcTable->findVictim(access_pc);
     victim->lastAddr = access_addr;
-    pcTable->insertEntry(access_pc, false, victim);*/
+    pcTable->insertEntry(access_pc, false, victim);
 }
 
 uint32_t
