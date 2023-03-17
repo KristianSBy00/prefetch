@@ -4,15 +4,15 @@
 #include <math.h>    
 
 //in bytes
-#define BLOCK_SIZE              134217728u
+#define BLOCK_SIZE              4096u
 #define MAIN_MEMORY_SIZE        8589934592u
-#define opt_entry_num           MAIN_MEMORY_SIZE/BLOCK_SIZE //=> 64
+#define opt_entry_num           2048
 
 #define OPT_ENTRY_ACCURATE      1u
 #define OPT_ENTRY_INACCURATE    0u
 
 #define n 4
-#define m 8
+#define m 2048
 #define p 64
 
 struct DPTEntry {
@@ -40,7 +40,7 @@ struct opt_table
     unsigned char accuracy;
 };
 
-long calculate_opt_adress(unsigned long addr);
+long calculate_opt_delta(unsigned long addr);
 void update_LRU(struct entry finds[]);
 void nuke_DPTs();
 void update_deltas(long next_delta, long raw_delta_sequence[]);

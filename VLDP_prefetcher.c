@@ -115,10 +115,16 @@ struct prediction find_next_delta(long delta_seq[]){
 
 long prefetch_delta(long adress){
 
-   long tmp_Tag = adress >> mylog2(BLOCK_SIZE);
+   adress = adress >> 6;
+   //calculate region
+    //shift offset
+    //unsigned long tmp_Tag = addr >> 6;
+    //shift index
+   unsigned long tmp_Tag = adress >> mylog2(BLOCK_SIZE);
+    //shift region
    tmp_Tag = tmp_Tag >> mylog2(opt_entry_num);
 
-   //first access of the page
+   //first access of the region
    if(tmp_Tag != my_previous_tag){
       nuke_DPTs();
    }
@@ -159,20 +165,24 @@ long prefetch_delta(long adress){
    return next_delta_prediction.value;
 }
 
-long calculate_opt_adress(unsigned long addr)
+long calculate_opt_delta(unsigned long addr)
 {
     //delta unused
-    long calced_addr = 0;
+    long calced_delta = 0;
 
-    static unsigned char block_access = 0;
+    static unsigned char region_access = 0;
 
     static unsigned long previous_tag = 0;
     static long previous_addr = 0;
-    long current_addr = addr;
+    long current_addr = addr >> 6;
     long delta_t; 
 
-    //calculate tag
+    //calculate region
+    //shift offset
+    //unsigned long tmp_Tag = addr >> 6;
+    //shift index
     unsigned long tmp_Tag = addr >> mylog2(BLOCK_SIZE);
+    //shift region
     tmp_Tag = tmp_Tag >> mylog2(opt_entry_num);
 
     //first access of the page
@@ -181,17 +191,17 @@ long calculate_opt_adress(unsigned long addr)
         //check validity
         if (OPT_prefetch[tmp_Tag].accuracy == OPT_ENTRY_ACCURATE)
         {
-            calced_addr = OPT_prefetch[tmp_Tag].delta;
+            calced_delta = OPT_prefetch[tmp_Tag].delta;
         }
         else
         {
             //Do nothing
         }
-        block_access = 1;
+        region_access = 1;
         
     }
     //Second access of the same page
-    else if( block_access == 1)
+    else if( region_access == 1)
     {
         //calculate delta
         delta_t = current_addr - previous_addr;
@@ -201,7 +211,7 @@ long calculate_opt_adress(unsigned long addr)
         if (delta_t == OPT_prefetch[tmp_Tag].delta)
         {
             OPT_prefetch[tmp_Tag].accuracy = 1;
-            calced_addr = OPT_prefetch[tmp_Tag].delta;
+            calced_delta = OPT_prefetch[tmp_Tag].delta;
         }
         //the stored mismatches with the current delta
         else
@@ -212,7 +222,7 @@ long calculate_opt_adress(unsigned long addr)
             OPT_prefetch[tmp_Tag].accuracy = 0;
         }
 
-        block_access++;
+        region_access++;
     }
     //3 and 3+ accesses of the same page
     else
@@ -224,8 +234,8 @@ long calculate_opt_adress(unsigned long addr)
     previous_addr = current_addr;
     previous_tag = tmp_Tag;
 
-    //return prefetchable addr(OFFSET!)
-    return calced_addr;
+    //return prefetchable delta(LINE OFFSET!)
+    return calced_delta;
 }
 
 unsigned long VLDP_prefetch(unsigned long adress){
@@ -236,23 +246,25 @@ unsigned long VLDP_prefetch(unsigned long adress){
    unsigned long addr_out;
    
    //Always returns 0 on first 3 acceses!
-   next_delta_DPT = prefetch_delta(adress);
-   next_delta_OPT = calculate_opt_adress(adress); 
+   next_delta_DPT = prefetch_delta(adress) << 6;
+   next_delta_OPT = calculate_opt_delta(adress); 
 
    addr_out = adress + 1;
 
    if (next_delta_OPT != 0){
       //printf("Sending result from opt\n");
       //return adress + next_delta_OPT;
-      addr_out =adress + next_delta_OPT;
+      addr_out = ((adress >> 6) + next_delta_OPT) << 6;
    }
    if (next_delta_DPT != 0){
       //printf("Sending result from delta\n");
       //printf("The next from DPTs is: %d\n", next_delta_DPT);
       //return adress + next_delta_DPT;
-      addr_out = adress + next_delta_DPT;
+      addr_out = ((adress >> 6) + next_delta_DPT) << 6;
    }
    
+   //E
+
 
    //Remember to mke sure we dont acces adress that is to larege!!!!
 

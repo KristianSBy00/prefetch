@@ -7,6 +7,13 @@
 #include "VLDP_prefetcher.c"
 
 
+uint64_t debug_virt_address;
+uint64_t debug_physical_address;
+uint64_t debug_VLDPreturn_address;
+uint64_t debug_prefetched_addr;
+
+bool Debug = 1;
+
 namespace gem5
 {
 
@@ -64,8 +71,13 @@ TDTPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
     Addr access_pc = pfi.getPC();
     int context = 0;
 
+    debug_virt_address = access_addr_virtual;
+    debug_physical_address = access_addr;
+    
     
     unsigned long adress_to_get = VLDP_prefetch(access_addr);
+
+    debug_VLDPreturn_address = adress_to_get;
 
     if (access_addr == adress_to_get)
     {
@@ -74,8 +86,15 @@ TDTPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
     }
     else
     {
-        addresses.push_back(AddrPriority(adress_to_get, 0));
+        //translato to VA
+
+        addresses.push_back(AddrPriority(access_addr, 0));
     }
+
+    /*if (Debug)
+    {
+        Debug = 0;
+    }*/
 
     // Get matching storage of entries
     // Context is 0 due to single-threaded application
