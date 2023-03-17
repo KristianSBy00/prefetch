@@ -243,7 +243,7 @@ unsigned long VLDP_prefetch(unsigned long adress){
 
    unsigned long reagion = adress >> 12;
 
-   if(reagion != last_region){
+   if(reagion != 0){
       next_delta_OPT = calculate_opt_adress(adress); 
    }
    
