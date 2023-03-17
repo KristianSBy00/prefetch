@@ -247,17 +247,13 @@ TDTPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
 
     int offset = log2(blkSize);
 
-    unsigned long bad_name = access_addr >> offset;
+    unsigned long blk_addr = access_addr >> offset;
 
-    int delta = prefetch_delta(bad_name) << offset;
-
-    int offset_delta = delta;
-
-    unsigned long new_guy = access_addr + offset_delta;
+    int delta = prefetch_delta(blk_addr) << offset;
 
 
     if (delta == 0){
-        addresses.push_back(AddrPriority(access_addr + blkSize, 0));
+        addresses.push_back(AddrPriority(access_addr + delta, 0));
 
         PCTable* pcTable = findTable(context);
 
