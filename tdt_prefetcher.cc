@@ -68,11 +68,11 @@ TDTPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
 
     //Addr pysical = pfi.getPaddr();
 
-    int offset = log2(blkSize);
+    //int offset = log2(blkSize);
 
-    unsigned long blk_addr = access_addr >> offset;
+    unsigned long blk_addr = access_addr / blkSize;
 
-    int delta = prefetch_delta(blk_addr) << offset;
+    int delta = prefetch_delta(blk_addr) / blkSize;
 
 
     if (delta == 0){
