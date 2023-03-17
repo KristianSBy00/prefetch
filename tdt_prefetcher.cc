@@ -64,9 +64,7 @@ TDTPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
     Addr access_pc = pfi.getPC();
     int context = 0;
 
-    Addr access_addr_p = pfi.getPaddr();
-
-    //Addr pysical = pfi.getPaddr();
+    //Addr access_addr_p = pfi.getPaddr();
 
     //int offset = log2(blkSize);
 
