@@ -72,31 +72,35 @@ TDTPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
 
     unsigned long blk_addr = access_addr / blkSize;
 
-    int delta = prefetch_delta(blk_addr) / blkSize;
+    int delta = prefetch_delta(blk_addr) * blkSize;
 
 
-    if (delta == 0){
+    if (delta != 0){
         addresses.push_back(AddrPriority(access_addr + delta, 0));
-
-        PCTable* pcTable = findTable(context);
-
-        // Get matching entry from PC
-        TDTEntry *entry = pcTable->findEntry(access_pc, false);
-
-        // Check if you have entry
-        if (entry != nullptr) {
-            // There is an entry
-        } else {
-            // No entry
-        }
-
-        // *Add* new entry
-        // All entries exist, you must replace previous with new data
-        // Find replacement victim, update info
-        TDTEntry* victim = pcTable->findVictim(access_pc);
-        victim->lastAddr = access_addr;
-        pcTable->insertEntry(access_pc, false, victim);
     }
+    else{
+        addresses.push_back(AddrPriority(access_addr + blkSize, 0));
+    }
+
+    PCTable* pcTable = findTable(context);
+
+    // Get matching entry from PC
+    TDTEntry *entry = pcTable->findEntry(access_pc, false);
+
+    // Check if you have entry
+    if (entry != nullptr) {
+        // There is an entry
+    } else {
+         // No entry
+    }
+
+    // *Add* new entry
+    // All entries exist, you must replace previous with new data
+    // Find replacement victim, update info
+    TDTEntry* victim = pcTable->findVictim(access_pc);
+    victim->lastAddr = access_addr;
+    pcTable->insertEntry(access_pc, false, victim);
+
 }
 
 uint32_t
