@@ -70,7 +70,7 @@ TDTPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
 
     unsigned long blk_addr = access_addr / blkSize;
 
-    unsigned long delta = prefetch_delta(blk_addr) * blkSize;
+    long delta = prefetch_delta(blk_addr) * blkSize;
 
 
     if (delta != 0){
