@@ -11,14 +11,10 @@
 #define OPT_ENTRY_ACCURATE      1u
 #define OPT_ENTRY_INACCURATE    0u
 
-#define n 4
-#define m 1024
-#define p 64
-
 struct DPTEntry {
   int prediction;
   int LRU;
-  int delatas[n];
+  int delatas[4];
   int page_num;
 };
 

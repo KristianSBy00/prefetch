@@ -4,9 +4,8 @@
 #include "mem/cache/replacement_policies/base.hh"
 #include "params/TDTPrefetcher.hh"
 
+
 #include "VLDP_prefetcher.c"
-
-
 namespace gem5
 {
 
@@ -64,23 +63,29 @@ TDTPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
     Addr access_pc = pfi.getPC();
     int context = 0;
 
-    unsigned long adress_to_get = DPTH_prefetch(long(access_addr));
+    Addr access_addr_p = pfi.getPaddr();
 
-    if ( adress_to_get == access_addr){
+    //Addr pysical = pfi.getPaddr();
+
+    int offset = log2(blkSize);
+
+    unsigned long bruh = access_addr_p / offset;
+
+    int delta = prefetch_delta(bruh) * blkSize;
+
+    int offset_delta = delta;
+
+    unsigned long new_guy = access_addr_p + offset_delta;
+
+
+    if (delta == 0){
         addresses.push_back(AddrPriority(access_addr + blkSize, 0));
     }
     else{
-        addresses.push_back(AddrPriority((Addr)adress_to_get, 0));
+        //addresses.push_back(AddrPriority(new_guy, 0));
+        addresses.push_back(AddrPriority(new_guy, 0));
     }
 
-    // Next line prefetching
-    //addresses.push_back(AddrPriority(access_addr + blkSize, 0));
-    //addresses.push_back(AddrPriority((Addr)adress_to_get, 0));
-
-
-
-    // Get matching storage of entries
-    // Context is 0 due to single-threaded application
     PCTable* pcTable = findTable(context);
 
     // Get matching entry from PC

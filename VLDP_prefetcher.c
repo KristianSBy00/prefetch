@@ -1,11 +1,13 @@
 #include "VLDP_prefetcher.h"
 
+int n = 3;
+int m = 16;
 
 int last_adress_valid = 0;
 unsigned long last_adress;
-int last_deltas[n];
-int new_delta_seq[n];
-struct DPTEntry DPTs[n][m];
+int last_deltas[3];
+int new_delta_seq[3];
+struct DPTEntry DPTs[3][16];
 
 unsigned int page_num = 0;
 unsigned int prev_page = 0;
@@ -27,24 +29,9 @@ void update_LRU(struct entry finds[]){
 }
 
 
-void nuke_DPTs(){
-   printf("Nuke go BOOOM!!\n");
-
-   for(int i = 0; i < n; i++){
-      last_deltas[i] = 0;
-      new_delta_seq[i] = 0;
-      struct DPTEntry fresh_new;
-
-      for(int j = 0; j < m; j++){
-         DPTs[i][j] = fresh_new;
-      } 
-   }
-}
-
 void update_deltas(int page_num, int next_delta, int raw_delta_sequence[]){
    for(int i = 0; i < n; i++){
       int victm = 0;
-      int delta_seqence[4];
 
       struct DPTEntry new_entry;
       new_entry.LRU = 0;
@@ -123,30 +110,18 @@ struct prediction find_next_delta(int page_num, int delta_seq[]){
 
 
 int prefetch_delta(unsigned long adress){
-
-   //int tmp_Tag = adress >> log2(double(BLOCK_SIZE));
-   //tmp_Tag = tmp_Tag >> (int)log2(opt_entry_num);
-   //page_num = tmp_Tag >> log2(doube(opt_entry_num));
-
-   int page_num = 64*adress / (MAIN_MEMORY_SIZE);
-   page_num = 0;
-
-   //printf("Addres: %ld, demo: %d\n", adress, page_num);
+   int page_num = 0;
 
    //first access of the page
    if(page_num != prev_page){
-      //printf("Changing page to %d, from %d!\n", page_num, prev_page);
       last_adress_valid = 0;
       prev_page = page_num;
       return 0;
    }
 
-   //printf("I am on page %d!\n", page_num);
-
    prev_page = page_num;
 
    if (last_adress_valid == 0){
-      //printf("Initializing prefetcher!\n");
       last_adress = adress;
       last_adress_valid = 1;
       return 0;
@@ -182,6 +157,7 @@ int calculate_opt_adress(unsigned long addr)
 {
     //delta unused
     int calced_addr = 0;
+
 
     static unsigned char block_access = 0;
 
