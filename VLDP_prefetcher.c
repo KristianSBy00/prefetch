@@ -4,16 +4,21 @@ int n = 4;
 int m = 64;
 
 int last_adress_valid = 0;
+
+
 unsigned long last_adress;
 int last_deltas[4];
 int new_delta_seq[4];
 struct DPTEntry DPTs[4][64];
+
+struct per_page_DHB_entry per_page_DHB[1024];
 
 unsigned int page_num = 0;
 unsigned int prev_page = 0;
 
 //create global direct mapped OPT cache table
 struct opt_table OPT_prefetch[opt_entry_num];
+
 
 void update_LRU(struct entry finds[]){
    for(int i = 0; i < n; i++){
@@ -233,12 +238,20 @@ unsigned long VLDP_prefetch(unsigned long adress){
    int next_delta_DPT;
    int next_delta_OPT;
    unsigned long addr_out;
+
+   addr_out = adress;
+
+   unsigned long reagion = adress >> 12;
+
+   if(reagon != last_region){
+      next_delta_OPT = calculate_opt_adress(adress); 
+   }
+
+   per_page_DHB_entry[]
    
    //Always returns 0 on first 3 acceses!
    next_delta_DPT = prefetch_delta(adress);
    next_delta_OPT = calculate_opt_adress(adress); 
-
-   addr_out = adress;
 
    if (next_delta_OPT != 0){
       printf("Sending result from opt\n");

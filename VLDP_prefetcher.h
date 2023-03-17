@@ -11,6 +11,13 @@
 #define OPT_ENTRY_ACCURATE      1u
 #define OPT_ENTRY_INACCURATE    0u
 
+
+struct per_page_DHB_entry{
+  int page tag;
+  int last_referenced_block;
+  int last_observed_deltas[4]
+}
+
 struct DPTEntry {
   int prediction;
   int LRU;
