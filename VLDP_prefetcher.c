@@ -1,13 +1,13 @@
 #include "VLDP_prefetcher.h"
 
-int n = 3;
-int m = 16;
+int n = 4;
+int m = 64;
 
 int last_adress_valid = 0;
 unsigned long last_adress;
-int last_deltas[3];
-int new_delta_seq[3];
-struct DPTEntry DPTs[3][16];
+int last_deltas[4];
+int new_delta_seq[4];
+struct DPTEntry DPTs[4][64];
 
 unsigned int page_num = 0;
 unsigned int prev_page = 0;
