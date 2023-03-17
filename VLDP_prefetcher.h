@@ -13,9 +13,9 @@
 
 
 struct per_page_DHB_entry{
-  int page tag;
+  int page_tag;
   int last_referenced_block;
-  int last_observed_deltas[4]
+  int last_observed_deltas[4];
 }
 
 struct DPTEntry {

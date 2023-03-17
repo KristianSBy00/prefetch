@@ -243,11 +243,9 @@ unsigned long VLDP_prefetch(unsigned long adress){
 
    unsigned long reagion = adress >> 12;
 
-   if(reagon != last_region){
+   if(reagion != last_region){
       next_delta_OPT = calculate_opt_adress(adress); 
    }
-
-   per_page_DHB_entry[]
    
    //Always returns 0 on first 3 acceses!
    next_delta_DPT = prefetch_delta(adress);
