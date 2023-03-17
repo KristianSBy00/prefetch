@@ -68,7 +68,7 @@ TDTPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
     Addr access_pc = pfi.getPC();
     int context = 0;
 
-    //Addr access_addr_p = pfi.getPaddr();
+    Addr access_addr_p = pfi.getPaddr();
 
     //Addr pysical = pfi.getPaddr();
 
@@ -76,24 +76,24 @@ TDTPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
 
     //long delta = prefetch_delta(blk_addr) << 10;
 
-    unsigned long block_num = access_addr / blkSize;
+    int delta = prefetch_delta(blk_addr) / blkSize;
 
     vector<uint64_t> to_prefetch = vldp.access(block_num);
 
-    for(uint64_t i : to_prefetch){
-        addresses.push_back(AddrPriority(i * blkSize, 0));
+    if (delta == 0){
+        addresses.push_back(AddrPriority(access_addr + delta, 0));
 
-        PCTable* pcTable = findTable(context);
+    PCTable* pcTable = findTable(context);
 
-        // Get matching entry from PC
-        TDTEntry *entry = pcTable->findEntry(access_pc, false);
+    // Get matching entry from PC
+    TDTEntry *entry = pcTable->findEntry(access_pc, false);
 
-        // Check if you have entry
-        if (entry != nullptr) {
-            // There is an entry
-        } else {
-            // No entry
-        }
+    // Check if you have entry
+    if (entry != nullptr) {
+        // There is an entry
+    } else {
+         // No entry
+    }
 
         // *Add* new entry
         // All entries exist, you must replace previous with new data
@@ -101,7 +101,6 @@ TDTPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
         TDTEntry* victim = pcTable->findVictim(access_pc);
         victim->lastAddr = access_addr;
         pcTable->insertEntry(access_pc, false, victim);
-
     }
 }
 
