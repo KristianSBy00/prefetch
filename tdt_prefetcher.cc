@@ -7,6 +7,8 @@
 
 #include "VLDP_prefetcher.c"
 
+#include "vldp.cpp"
+
 namespace gem5
 {
 
@@ -55,6 +57,8 @@ TDTPrefetcher::allocateNewContext(int context)
     return &(insertion_result.first->second);
 }
 
+VLDP vldp = VLDP(64, 1, 16, 64, 64);
+
 void
 TDTPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
                                  std::vector<AddrPriority> &addresses)
@@ -64,19 +68,20 @@ TDTPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
     Addr access_pc = pfi.getPC();
     int context = 0;
 
-    Addr access_addr_p = pfi.getPaddr();
+    //Addr access_addr_p = pfi.getPaddr();
 
     //Addr pysical = pfi.getPaddr();
 
-    //int offset = log2(blkSize);
+    //unsigned long blk_addr = access_addr >> 10;
 
-    unsigned long blk_addr = access_addr / blkSize;
+    //long delta = prefetch_delta(blk_addr) << 10;
 
-    int delta = prefetch_delta(blk_addr) / blkSize;
+    unsigned long block_num = access_addr / blkSize;
 
+    vector<uint64_t> to_prefetch = vldp.access(block_num);
 
-    if (delta == 0){
-        addresses.push_back(AddrPriority(access_addr + delta, 0));
+    for(uint64_t i : to_prefetch){
+        addresses.push_back(AddrPriority(i * blkSize, 0));
 
         PCTable* pcTable = findTable(context);
 
@@ -96,6 +101,7 @@ TDTPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
         TDTEntry* victim = pcTable->findVictim(access_pc);
         victim->lastAddr = access_addr;
         pcTable->insertEntry(access_pc, false, victim);
+
     }
 }
 

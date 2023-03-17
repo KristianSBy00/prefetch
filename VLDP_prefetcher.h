@@ -14,7 +14,7 @@
 struct DPTEntry {
   int prediction;
   int LRU;
-  int delatas[4];
+  long delatas[4];
   int page_num;
 };
 
@@ -27,7 +27,7 @@ struct entry {
 
 struct prediction {
   int valid;
-  int value;
+  long value;
 };
 
 struct opt_table
@@ -40,8 +40,8 @@ struct opt_table
 int calculate_opt_adress(unsigned long addr);
 void update_LRU(struct entry finds[]);
 void nuke_DPTs();
-void update_deltas(int page_num, int next_delta, int raw_delta_sequence[]);
-struct prediction find_next_delta(int page_num, int delta_seq[]);
-int prefetch_delta(unsigned long adress);
+void update_deltas(int page_num, long next_delta, long raw_delta_sequence[]);
+struct prediction find_next_delta(int page_num, long delta_seq[]);
+long prefetch_delta(unsigned long adress);
 unsigned long VLDP_prefetch(unsigned long adress);
 unsigned long DPTH_prefetch(unsigned long adress);

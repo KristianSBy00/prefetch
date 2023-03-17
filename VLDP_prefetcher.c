@@ -1,13 +1,13 @@
 #include "VLDP_prefetcher.h"
 
 int n = 4;
-int m = 64;
+int m = 1024;
 
 int last_adress_valid = 0;
 unsigned long last_adress;
-int last_deltas[4];
-int new_delta_seq[4];
-struct DPTEntry DPTs[4][64];
+long last_deltas[4];
+long new_delta_seq[4];
+struct DPTEntry DPTs[4][1024];
 
 unsigned int page_num = 0;
 unsigned int prev_page = 0;
@@ -29,7 +29,7 @@ void update_LRU(struct entry finds[]){
 }
 
 
-void update_deltas(int page_num, int next_delta, int raw_delta_sequence[]){
+void update_deltas(int page_num, long next_delta, long raw_delta_sequence[]){
    for(int i = 0; i < n; i++){
       int victm = 0;
 
@@ -53,7 +53,7 @@ void update_deltas(int page_num, int next_delta, int raw_delta_sequence[]){
 }
 
 
-struct prediction find_next_delta(int page_num, int delta_seq[]){
+struct prediction find_next_delta(int page_num, long delta_seq[]){
    struct entry finds[n];
 
    int first_valid = -1;
@@ -109,7 +109,7 @@ struct prediction find_next_delta(int page_num, int delta_seq[]){
 }
 
 
-int prefetch_delta(unsigned long adress){
+long prefetch_delta(unsigned long adress){
    int page_num = 0;
 
    //first access of the page
