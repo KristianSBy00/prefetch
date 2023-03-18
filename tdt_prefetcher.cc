@@ -57,7 +57,7 @@ TDTPrefetcher::allocateNewContext(int context)
     return &(insertion_result.first->second);
 }
 
-VLDP vldp = VLDP(64, 1, 16, 64, 64);
+VLDP vldp = VLDP(64, 16, 16, 256, 256);
 
 void
 TDTPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
