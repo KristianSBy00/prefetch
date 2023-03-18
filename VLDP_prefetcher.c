@@ -1,24 +1,48 @@
 #include "VLDP_prefetcher.h"
 
-int n = 4;
-int m = 1024;
-
+int n = HIST_SIZE;
+int m = DPT_ENTRYS;
 int last_adress_valid = 0;
+int page_size = PAGE_SIZE;
 
-
-unsigned long last_adress;
-long last_deltas[4];
-long new_delta_seq[4];
-struct DPTEntry DPTs[4][1024];
-
-struct per_page_DHB_entry per_page_DHB[1024];
-
-unsigned int page_num = 0;
-unsigned int prev_page = 0;
+struct DPTEntry DPTs[HIST_SIZE][DPT_ENTRYS];
+struct DHB_entry DHB[DPT_ENTRYS];
 
 //create global direct mapped OPT cache table
 struct opt_table OPT_prefetch[opt_entry_num];
 
+int get_DHB_index(unsigned long page_num){
+
+   int to_remove = 0;
+
+   for (int i = 0; i < page_size; i++){
+      if (DHB[i].page_num == page_num){
+         return i;
+      }
+
+      if (DHB[i].LRU >  DHB[to_remove].LRU){
+         to_remove = i;
+      }
+   }
+ 
+  struct DHB_entry new_entry;
+  new_entry.page_num = page_num;
+  new_entry.acceced = 0;
+  new_entry.LRU = 0;
+ 
+  for(int i = 0; i<n; i++){
+   new_entry.deltas[i] = 0;
+  }
+
+  for (int i = 0; i < page_size; i++){
+   DHB[i].LRU += 1;
+  }
+
+  DHB[to_remove] = new_entry;
+
+  return to_remove;
+
+}
 
 void update_LRU(struct entry finds[]){
    for(int i = 0; i < n; i++){
@@ -33,39 +57,81 @@ void update_LRU(struct entry finds[]){
    }
 }
 
+void print_delta_prediction_table(int i){
+   printf("Table %d:\n", i);
+   for(int j = 0; j < m; j++){
 
-void update_deltas(int page_num, long next_delta, long raw_delta_sequence[]){
+      printf("Seqence: \n");
+
+      for(int k = 0; k <= i; k++){
+         printf("%ld ", DPTs[i][j].delatas[k]);
+      }
+      printf(", LRU: %d", DPTs[i][j].LRU);
+      printf(", prediction: %ld", DPTs[i][j].prediction);
+      printf("\n");
+   }
+}
+
+void print_delta_prediction_tables(){
    for(int i = 0; i < n; i++){
-      int victm = 0;
+      print_delta_prediction_table(i);
+   }
+}
 
-      struct DPTEntry new_entry;
-      new_entry.LRU = 0;
-      new_entry.prediction = next_delta;
-      new_entry.page_num = page_num;
+void update_delta_prediction_table(int i, int page_num, int next_delta, long raw_deltas[]){
+   int listing;
+   int victm = 0; 
+
+   for(int j = 0; j < m; j++){
+      listing = j; 
 
       for(int b = 0; b < i+1; b++){
-         new_entry.delatas[b + n - 1 - i] = raw_delta_sequence[b + n - 1 - i];
-      }
-
-      for(int j = 0; j < m; j++){
-         if (DPTs[i][j].LRU > DPTs[i][victm].LRU){
-            victm = j;
+         if (DPTs[i][j].delatas[b] != raw_deltas[b]){
+            listing = -1;
          }
       }
 
-      DPTs[i][victm] = new_entry;
+      if ( listing != -1 ){
+         break;
+      }
+
+      if (DPTs[i][j].LRU > DPTs[i][victm].LRU){
+         victm = j;
+      }
+   }
+
+   for(int j = 0; j < m; j++){
+      DPTs[i][j].LRU += 1;
+   }
+
+   if ( listing != -1 ){
+      DPTs[i][listing].LRU = 0;
+      return;
+   }
+
+   struct DPTEntry new_entry;
+   new_entry.LRU = 0;
+   new_entry.prediction = next_delta;
+   new_entry.page_num = page_num;
+
+   for(int b = 0; b < i+1; b++){
+      new_entry.delatas[b + n - 1 - i] = raw_deltas[b + n - 1 - i];
+   }
+
+   DPTs[i][victm] = new_entry; 
+}
+
+void update_delta_prediction_tables(int page_num, int next_delta, long raw_deltas[]){
+   for(int i = 0; i < n; i++){
+      update_delta_prediction_table(i, page_num, next_delta, raw_deltas);
    }
 }
 
 
-struct prediction find_next_delta(int page_num, long delta_seq[]){
+long find_next_delta(int page_num, long delta_seq[]){
    struct entry finds[n];
 
    int first_valid = -1;
-
-   struct prediction pred;
-   pred.valid = 0;
-   pred.value = 0;
 
    int found_any = 0;
 
@@ -102,78 +168,55 @@ struct prediction find_next_delta(int page_num, long delta_seq[]){
    }
 
    if (found_any == 0){
-      return pred;
+      return 0;
    }
 
    update_LRU(finds);
 
-   pred.valid = 1;
-   pred.value = DPTs[finds[first_valid].i][finds[first_valid].j].prediction;
-
-   return pred;
+   return DPTs[finds[first_valid].i][finds[first_valid].j].prediction;
 }
 
+void update_delta_history_buffer(unsigned long index, unsigned long page_offset){
+   //Find entry
 
-long prefetch_delta(unsigned long adress){
-   int page_num = 0;
+   long delta = page_offset - DHB[index].last_addr;
+   DHB[index].last_addr = page_offset;
+   DHB[index].last_predictor = delta;
 
-   //first access of the page
-   if(page_num != prev_page){
-      last_adress_valid = 0;
-      prev_page = page_num;
-      return 0;
+   if (delta == 0){
+      return;
    }
 
-   prev_page = page_num;
+   int new_seq[4];
 
-   if (last_adress_valid == 0){
-      last_adress = adress;
-      last_adress_valid = 1;
-      return 0;
+   for(int i = 0; i < n - 1; i++){
+      new_seq[i] = DHB[index].deltas[i+1];
    }
 
-   int new_delta = adress - last_adress;
+   //DHB[index].last_addr = page_offset;
 
-   for(int i = 0; i < n-1; i++){
-      new_delta_seq[i] = last_deltas[i+1];
-   }
-
-   new_delta_seq[n-1] = new_delta;
-
-   update_deltas(page_num, new_delta, last_deltas);
-
-   struct prediction next_delta_prediction = find_next_delta(page_num, new_delta_seq);
+   new_seq[3] = delta;
 
    for(int i = 0; i < n; i++){
-      last_deltas[i] = new_delta_seq[i];
+      DHB[index].deltas[i] = new_seq[i];
    }
 
-   last_adress = adress;
-
-   //Might need more gurding
-   if ( (next_delta_prediction.valid == 0) ){
-      return 0;
-   }
-
-   return next_delta_prediction.value;
+   DHB[index].acceced += 1;
+   DHB[index].last_predictor = delta;
 }
 
+/*
 int calculate_opt_adress(unsigned long addr)
 {
     //delta unused
-    int calced_addr = 0;
-
+    //int calced_addr = 0;
 
     static unsigned char block_access = 0;
-
     static unsigned int previous_tag = 0;
     static long previous_addr = 0;
     long current_addr = addr;
     int delta_t; 
 
-    //calculate tag
-    unsigned int tmp_Tag = addr >> (int)log2(BLOCK_SIZE);
-    tmp_Tag = tmp_Tag >> (int)log2(opt_entry_num);
 
     //first access of the page
     if(tmp_Tag != previous_tag)
@@ -228,42 +271,29 @@ int calculate_opt_adress(unsigned long addr)
     //return prefetchable addr(OFFSET!)
     return calced_addr;
 }
+*/
 
-unsigned long DPTH_prefetch(unsigned long adress){
-   int delta = prefetch_delta(adress);
-   return adress + delta;
-}
+unsigned long VLDP_prefetch(unsigned long block_number){
+   unsigned long page_num = block_number / page_size;
+   int page_offset = block_number % page_size;
 
-unsigned long VLDP_prefetch(unsigned long adress){
-   int next_delta_DPT;
-   int next_delta_OPT;
-   unsigned long addr_out;
+   int DHB_index = get_DHB_index(page_num);
+   update_delta_history_buffer(DHB_index, page_offset);
 
-   addr_out = adress;
-
-   unsigned long reagion = adress >> 12;
-
-   if(reagion != 0){
-      next_delta_OPT = calculate_opt_adress(adress); 
+   if (DHB[DHB_index].last_predictor == 0){
+      return block_number;
    }
-   
-   //Always returns 0 on first 3 acceses!
-   next_delta_DPT = prefetch_delta(adress);
-   next_delta_OPT = calculate_opt_adress(adress); 
 
-   if (next_delta_OPT != 0){
-      printf("Sending result from opt\n");
-      //return adress + next_delta_OPT;
-      addr_out = adress + next_delta_OPT;
+   if (DHB[DHB_index].acceced == 1){
+      return block_number;
    }
-   if (next_delta_DPT != 0){
-      printf("Sending result from delta\n");
-      printf("The next from DPTs is: %d\n", next_delta_DPT);
-      //return adress + next_delta_DPT;
-      addr_out = adress + next_delta_DPT;
+   else if (DHB[DHB_index].acceced == 2){
+      return block_number;
    }
-   
-   return addr_out;
+   else{
+      update_delta_prediction_tables(page_num, DHB[DHB_index].last_predictor, DHB[DHB_index].deltas);
+      return block_number + find_next_delta(page_num, DHB[DHB_index].deltas);
+   }
 
 }
 
@@ -274,35 +304,26 @@ int main() {
 
    prefetched = VLDP_prefetch(1);
    prefetched = VLDP_prefetch(2);
+   prefetched = VLDP_prefetch(3);
    prefetched = VLDP_prefetch(4);
 
-   prefetched = VLDP_prefetch(10000000);
-   prefetched = VLDP_prefetch(1000000010);
-   prefetched = VLDP_prefetch(10000020);
 
    prefetched = VLDP_prefetch(1);
-   prefetched = VLDP_prefetch(2);
+   prefetched = VLDP_prefetch(3); //+2
+   prefetched = VLDP_prefetch(5); //+2
+   prefetched = VLDP_prefetch(7);//+2
 
-   prefetched = VLDP_prefetch(10000000);
-   prefetched = VLDP_prefetch(10000010);
-   prefetched = VLDP_prefetch(10000020);
-
-   prefetched = VLDP_prefetch(1);
-   prefetched = VLDP_prefetch(2);
-
-   printf("Switching page!\n");
-
-   //prefetched = VLDP_prefetch(10011111100000);
-   printf("Next: %ld\n", prefetched);
-   
-   prefetched = VLDP_prefetch(10000010);
-   prefetched = VLDP_prefetch(858993459-6);
+   prefetched = VLDP_prefetch(63);//+2
+   prefetched = VLDP_prefetch(64);//+2
+   prefetched = VLDP_prefetch(65);//+2
+   prefetched = VLDP_prefetch(66);//+2
 
    printf("Next: %ld\n", prefetched);
 
    return 0;
 }
 */
+
 
 
 /*

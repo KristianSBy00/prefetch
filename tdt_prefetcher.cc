@@ -57,7 +57,7 @@ TDTPrefetcher::allocateNewContext(int context)
     return &(insertion_result.first->second);
 }
 
-VLDP vldp = VLDP(64, 16, 16, 256, 256);
+VLDP vldp = VLDP(64, 1, 4, 64, 64);
 
 void
 TDTPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
@@ -77,7 +77,32 @@ TDTPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
     //long delta = prefetch_delta(blk_addr) << 10;
 
     unsigned long block_num = access_addr / blkSize;
+    unsigned long block = VLDP_prefetch(block_num);
 
+    if (block != block_num){
+        addresses.push_back(AddrPriority(block * blkSize, 0));
+
+        PCTable* pcTable = findTable(context);
+
+        // Get matching entry from PC
+        TDTEntry *entry = pcTable->findEntry(access_pc, false);
+
+        // Check if you have entry
+        if (entry != nullptr) {
+            // There is an entry
+        } else {
+            // No entry
+        }
+
+        // *Add* new entry
+        // All entries exist, you must replace previous with new data
+        // Find replacement victim, update info
+        TDTEntry* victim = pcTable->findVictim(access_pc);
+        victim->lastAddr = access_addr;
+        pcTable->insertEntry(access_pc, false, victim);
+    }
+
+    /*
     vector<uint64_t> to_prefetch = vldp.access(block_num);
 
     for(uint64_t i : to_prefetch){
@@ -103,6 +128,7 @@ TDTPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
         pcTable->insertEntry(access_pc, false, victim);
 
     }
+    */
 }
 
 uint32_t
