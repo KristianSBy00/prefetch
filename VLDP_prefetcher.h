@@ -4,9 +4,10 @@
 #include <math.h>    
 
 //in bytes
-#define BLOCK_SIZE              134217728u
-#define MAIN_MEMORY_SIZE        8589934592u
-#define opt_entry_num           MAIN_MEMORY_SIZE/BLOCK_SIZE //=> 64
+#define BLOCK_SIZE              134217728
+#define page_bytes              4096
+#define MAIN_MEMORY_SIZE        8589934592
+#define opt_entry_num           64 //=> 64
 
 #define OPT_ENTRY_ACCURATE      1u
 #define OPT_ENTRY_INACCURATE    0u
@@ -14,7 +15,6 @@
 #define PAGE_SIZE               64
 #define HIST_SIZE               4
 #define DPT_ENTRYS              64
-
 
 
 struct DHB_entry{
@@ -27,6 +27,8 @@ struct DHB_entry{
   int acceced;
   long deltas[4];
 };
+
+
 
 struct DPTEntry {
   long prediction;
@@ -55,7 +57,7 @@ struct opt_table
 };
 
 int get_DHB_index(unsigned long page_num);
-int calculate_opt_adress(unsigned long addr);
+void update_opt(long offset, long delt);
 void update_LRU(struct entry finds[]);
 void nuke_DPTs();
 void update_delta_prediction_tables(int page_num, int next_delta, long raw_deltas[]);

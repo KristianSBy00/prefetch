@@ -68,6 +68,7 @@ void print_delta_prediction_table(int i){
       }
       printf(", LRU: %d", DPTs[i][j].LRU);
       printf(", prediction: %ld", DPTs[i][j].prediction);
+      printf(", page_num: %d", DPTs[i][j].page_num);
       printf("\n");
    }
 }
@@ -115,7 +116,7 @@ void update_delta_prediction_table(int i, int page_num, int next_delta, long raw
    new_entry.page_num = page_num;
 
    for(int b = 0; b < i+1; b++){
-      new_entry.delatas[b + n - 1 - i] = raw_deltas[b + n - 1 - i];
+      new_entry.delatas[b] = raw_deltas[b + n - 1 - i];
    }
 
    DPTs[i][victm] = new_entry; 
@@ -147,8 +148,8 @@ long find_next_delta(int page_num, long delta_seq[]){
             continue;
          }
 
-         for(int k = 0; k<i+1; k++){
-            if(DPTs[i][j].delatas[k+bi] != delta_seq[k+bi]){
+         for(int k = 0; k<=i; k++){
+            if(DPTs[i][j].delatas[k] != delta_seq[k+bi]){
                finds[i].valid = 0;
             }
          }
@@ -176,15 +177,16 @@ long find_next_delta(int page_num, long delta_seq[]){
    return DPTs[finds[first_valid].i][finds[first_valid].j].prediction;
 }
 
-void update_delta_history_buffer(unsigned long index, unsigned long page_offset){
+long update_delta_history_buffer(unsigned long index, unsigned long page_offset){
    //Find entry
 
-   long delta = page_offset - DHB[index].last_addr;
-   DHB[index].last_addr = page_offset;
-   DHB[index].last_predictor = delta;
+   long last_delta = DHB[index].last_predictor;
+   long delta = page_offset - DHB[index].last_referenced_block;
+   DHB[index].last_referenced_block = page_offset;
+   //DHB[index].last_predictor = delta;
 
    if (delta == 0){
-      return;
+      return 0;
    }
 
    int new_seq[4];
@@ -195,7 +197,7 @@ void update_delta_history_buffer(unsigned long index, unsigned long page_offset)
 
    //DHB[index].last_addr = page_offset;
 
-   new_seq[3] = delta;
+   new_seq[3] = last_delta;
 
    for(int i = 0; i < n; i++){
       DHB[index].deltas[i] = new_seq[i];
@@ -203,6 +205,8 @@ void update_delta_history_buffer(unsigned long index, unsigned long page_offset)
 
    DHB[index].acceced += 1;
    DHB[index].last_predictor = delta;
+
+   return delta;
 }
 
 /*
@@ -278,9 +282,12 @@ unsigned long VLDP_prefetch(unsigned long block_number){
    int page_offset = block_number % page_size;
 
    int DHB_index = get_DHB_index(page_num);
-   update_delta_history_buffer(DHB_index, page_offset);
 
-   if (DHB[DHB_index].last_predictor == 0){
+   long delta = update_delta_history_buffer(DHB_index, page_offset);
+
+   //printf("block_number: %ld, delta: %ld\n", block_number, delta);
+
+   if (delta == 0){
       return block_number;
    }
 
@@ -292,7 +299,31 @@ unsigned long VLDP_prefetch(unsigned long block_number){
    }
    else{
       update_delta_prediction_tables(page_num, DHB[DHB_index].last_predictor, DHB[DHB_index].deltas);
-      return block_number + find_next_delta(page_num, DHB[DHB_index].deltas);
+      /*printf("deltas i will update with: {");
+      for (int i = 0; i < 4; i++){
+         printf("%ld, ", DHB[DHB_index].deltas[i]);
+      }
+      printf("}, prediction: %ld\n", delta);
+
+      update_delta_prediction_tables(page_num, delta, DHB[DHB_index].deltas);
+      print_delta_prediction_tables();
+      printf("page num: %ld, {", page_num);
+      for (int i = 0; i < 4; i++){
+         printf("%ld, ", DHB[DHB_index].deltas[i]);
+      }
+      printf("}\n");
+      */
+
+      /*
+      long new_seq[4]; 
+      for(int i = 0; i < 3; i++){
+         new_seq[i] = DHB[DHB_index].deltas[i+1];
+      }
+      new_seq[3] = delta;
+      */
+
+
+      return block_number + find_next_delta(page_num,  DHB[DHB_index].deltas);
    }
 
 }
@@ -302,10 +333,20 @@ unsigned long VLDP_prefetch(unsigned long block_number){
 int main() {
    unsigned long prefetched;
 
-   prefetched = VLDP_prefetch(1);
-   prefetched = VLDP_prefetch(2);
-   prefetched = VLDP_prefetch(3);
-   prefetched = VLDP_prefetch(4);
+   prefetched = VLDP_prefetch(1);//
+   prefetched = VLDP_prefetch(2);//+1
+   prefetched = VLDP_prefetch(4);//+2
+   prefetched = VLDP_prefetch(7);//+3
+   prefetched = VLDP_prefetch(11);//+4
+   prefetched = VLDP_prefetch(16);//+5
+   prefetched = VLDP_prefetch(22);//+6
+
+   prefetched = VLDP_prefetch(1);//
+   prefetched = VLDP_prefetch(2);//+1
+   prefetched = VLDP_prefetch(4);//+2
+   prefetched = VLDP_prefetch(7);//+3
+   prefetched = VLDP_prefetch(11);//+4
+   prefetched = VLDP_prefetch(16);//+5
 
 
    prefetched = VLDP_prefetch(1);
@@ -313,17 +354,24 @@ int main() {
    prefetched = VLDP_prefetch(5); //+2
    prefetched = VLDP_prefetch(7);//+2
 
-   prefetched = VLDP_prefetch(63);//+2
-   prefetched = VLDP_prefetch(64);//+2
-   prefetched = VLDP_prefetch(65);//+2
-   prefetched = VLDP_prefetch(66);//+2
+   prefetched = VLDP_prefetch(0);//+2
+   prefetched = VLDP_prefetch(2);//+4
+   prefetched = VLDP_prefetch(6);//+8
+   prefetched = VLDP_prefetch(14);//+16
+   prefetched = VLDP_prefetch(30);//+16
+   prefetched = VLDP_prefetch(62);
+
+   prefetched = VLDP_prefetch(0);//-30
+   prefetched = VLDP_prefetch(2);//+2
+   prefetched = VLDP_prefetch(6);//+4
+   prefetched = VLDP_prefetch(14);//+8
+   prefetched = VLDP_prefetch(30);//+16
 
    printf("Next: %ld\n", prefetched);
 
    return 0;
 }
 */
-
 
 
 /*
