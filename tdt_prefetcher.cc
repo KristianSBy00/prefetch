@@ -57,8 +57,6 @@ TDTPrefetcher::allocateNewContext(int context)
     return &(insertion_result.first->second);
 }
 
-VLDP vldp = VLDP(64, 1, 4, 64, 64);
-
 void
 TDTPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
                                  std::vector<AddrPriority> &addresses)
@@ -77,29 +75,37 @@ TDTPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
     //long delta = prefetch_delta(blk_addr) << 10;
 
     unsigned long block_num = access_addr / blkSize;
-    unsigned long block = VLDP_prefetch(block_num);
 
-    if (block != block_num){
-        addresses.push_back(AddrPriority(block * blkSize, 0));
+    struct stupid prefetch = VLDP_prefetch(block_num);
+    
+    for(int i = 0; i < 4; i++){
+        unsigned long block = prefetch.blocks[i];
 
-        PCTable* pcTable = findTable(context);
+        if (block != block_num){
+            addresses.push_back(AddrPriority(block * blkSize, 0));
 
-        // Get matching entry from PC
-        TDTEntry *entry = pcTable->findEntry(access_pc, false);
+            PCTable* pcTable = findTable(context);
 
-        // Check if you have entry
-        if (entry != nullptr) {
-            // There is an entry
-        } else {
-            // No entry
+            // Get matching entry from PC
+            TDTEntry *entry = pcTable->findEntry(access_pc, false);
+
+            // Check if you have entry
+            if (entry != nullptr) {
+                // There is an entry
+            } else {
+                // No entry
+            }
+
+            // *Add* new entry
+            // All entries exist, you must replace previous with new data
+            // Find replacement victim, update info
+            TDTEntry* victim = pcTable->findVictim(access_pc);
+            victim->lastAddr = access_addr;
+            pcTable->insertEntry(access_pc, false, victim);
         }
-
-        // *Add* new entry
-        // All entries exist, you must replace previous with new data
-        // Find replacement victim, update info
-        TDTEntry* victim = pcTable->findVictim(access_pc);
-        victim->lastAddr = access_addr;
-        pcTable->insertEntry(access_pc, false, victim);
+        else{
+            break;
+        }
     }
 
     /*
