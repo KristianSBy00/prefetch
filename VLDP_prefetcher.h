@@ -14,7 +14,7 @@
 
 #define PAGE_SIZE               64
 #define HIST_SIZE               4
-#define DPT_ENTRYS              8
+#define DPT_ENTRYS              10
 #define DEGREE                  8
 
 
@@ -22,7 +22,7 @@ struct DHB_entry{
   unsigned long last_addr;
   unsigned long page_num;
   int last_referenced_block;
-  //int last_predictor;
+  long last_predictor;
   int num_times_used;
   int LRU;
   int acceced;

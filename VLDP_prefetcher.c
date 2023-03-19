@@ -2,7 +2,6 @@
 
 int n = HIST_SIZE;
 int m = DPT_ENTRYS;
-int last_adress_valid = 0;
 int page_size = PAGE_SIZE;
 
 struct DPTEntry DPTs[HIST_SIZE][DPT_ENTRYS];
@@ -201,78 +200,24 @@ long update_delta_history_buffer(unsigned long index, unsigned long page_offset)
    }
 
    DHB[index].acceced += 1;
-   //DHB[index].last_predictor = delta;
+   DHB[index].last_predictor = delta;
 
    return delta;
 }
 
-/*
-int calculate_opt_adress(unsigned long addr)
+
+void update_opt(long offset, long delt)
 {
-    //delta unused
-    //int calced_addr = 0;
-
-    static unsigned char block_access = 0;
-    static unsigned int previous_tag = 0;
-    static long previous_addr = 0;
-    long current_addr = addr;
-    int delta_t; 
-
-
-    //first access of the page
-    if(tmp_Tag != previous_tag)
-    {
-        //check validity
-        if (OPT_prefetch[tmp_Tag].accuracy == OPT_ENTRY_ACCURATE)
-        {
-            calced_addr = OPT_prefetch[tmp_Tag].delta;
-        }
-        else
-        {
-            //Do nothing?
-            //Or return delta = 1? (Next Line)
-        }
-        block_access = 1;
-        
-    }
-    //Second access of the same page
-    else if( block_access == 1)
-    {
-        //calculate delta
-        delta_t = current_addr - previous_addr;
-        //printf("Actual delta: %d\n", delta_t);
-
-        //matching delta => good prediction
-        if (delta_t == OPT_prefetch[tmp_Tag].delta)
-        {
-            OPT_prefetch[tmp_Tag].accuracy = 1;
-            calced_addr = OPT_prefetch[tmp_Tag].delta;
-        }
-        //the stored mismatches with the current delta
-        else
-        {
-            if (OPT_prefetch[tmp_Tag].accuracy == 0)
-                OPT_prefetch[tmp_Tag].delta = delta_t;
-
-            OPT_prefetch[tmp_Tag].accuracy = 0;
-        }
-
-        block_access++;
-    }
-    //3 and 3+ accesses of the same page
-    else
-    {
-        //Do nothing
-    }
-    
-    //Save current datas 
-    previous_addr = current_addr;
-    previous_tag = tmp_Tag;
-
-    //return prefetchable addr(OFFSET!)
-    return calced_addr;
+   if ( OPT_prefetch[offset].delta == delt ){
+      OPT_prefetch[offset].accuracy = 1;
+   }
+   else{
+      if (OPT_prefetch[offset].accuracy == 0){
+         OPT_prefetch[offset].delta = delt;
+         OPT_prefetch[offset].accuracy = 0;
+      }
+   }
 }
-*/
 
 struct stupid VLDP_prefetch(unsigned long block_number){
    unsigned long page_num = block_number / page_size;
@@ -294,10 +239,15 @@ struct stupid VLDP_prefetch(unsigned long block_number){
    }
 
    if (DHB[DHB_index].acceced == 1){
+      if (OPT_prefetch[page_offset].accuracy == 1){
+         out.blocks[0] = OPT_prefetch[page_offset].delta + block_number;
+         return out;
+      }
       return out;
    }
    else if (DHB[DHB_index].acceced == 2){
-      return out;
+      long first_offset = (page_offset - delta) % page_size;
+      update_opt(first_offset, delta);
    }
    else{
       update_delta_prediction_tables(page_num, DHB[DHB_index].deltas);
