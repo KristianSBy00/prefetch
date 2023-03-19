@@ -54,15 +54,14 @@ struct prediction {
   long value;
 };
 
-struct opt_table
-{
+struct opt_table{
     unsigned int Tag;
-    int delta;
+    long delta;
     unsigned char accuracy;
 };
 
 int get_DHB_index(unsigned long page_num);
-void update_opt(long offset, long delt);
+void a_update_opt(int offset, long delt);
 void update_LRU(struct entry finds[]);
 void nuke_DPTs();
 void update_delta_prediction_tables(int page_num, long raw_deltas[]);

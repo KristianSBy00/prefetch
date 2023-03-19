@@ -206,8 +206,7 @@ long update_delta_history_buffer(unsigned long index, unsigned long page_offset)
 }
 
 
-void update_opt(long offset, long delt)
-{
+void a_update_opt(int offset, long delt){
    if ( OPT_prefetch[offset].delta == delt ){
       OPT_prefetch[offset].accuracy = 1;
    }
@@ -246,8 +245,8 @@ struct stupid VLDP_prefetch(unsigned long block_number){
       return out;
    }
    else if (DHB[DHB_index].acceced == 2){
-      long first_offset = (page_offset - delta) % page_size;
-      update_opt(first_offset, delta);
+      int first_offset = (page_offset - delta) % opt_entry_num;
+      a_update_opt(first_offset, delta);
    }
    else{
       update_delta_prediction_tables(page_num, DHB[DHB_index].deltas);
