@@ -14,7 +14,7 @@
 
 #define PAGE_SIZE               64
 #define HIST_SIZE               4
-#define DPT_ENTRYS              10
+#define DPT_ENTRYS              8
 #define DEGREE                  8
 
 
