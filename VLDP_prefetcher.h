@@ -14,7 +14,7 @@
 
 #define PAGE_SIZE               64
 #define HIST_SIZE               4
-#define DPT_ENTRYS              6
+#define DPT_ENTRYS              8
 #define DEGREE                  8
 
 
@@ -66,6 +66,6 @@ void update_opt(long offset, long delt);
 void update_LRU(struct entry finds[]);
 void nuke_DPTs();
 void update_delta_prediction_tables(int page_num, long raw_deltas[]);
-long find_next_delta(int page_num, long delta_seq[]);
+long find_next_delta(int page_num, int speculative, long delta_seq[]);
 struct stupid VLDP_prefetch(unsigned long adress);
 unsigned long DPTH_prefetch(unsigned long adress);
