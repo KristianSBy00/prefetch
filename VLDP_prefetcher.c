@@ -9,6 +9,18 @@ struct DHB_entry DHB[DPT_ENTRYS];
 //create global direct mapped OPT cache table
 struct opt_table OPT_prefetch[opt_entry_num];
 
+//int initialized = 0;
+
+/*
+void init_opt_table(){
+   for(int i = 0; i<opt_entry_num; i++){
+      OPT_prefetch[i].Tag = 0;
+      OPT_prefetch[i].delta = 0;
+      OPT_prefetch[i].accuracy = 0;
+   }
+}
+*/
+
 int get_DHB_index(unsigned long page_num){
 
    int to_remove = 0;
@@ -125,7 +137,6 @@ void update_delta_prediction_tables(int page_num, long raw_deltas[]){
    }
 }
 
-
 long find_next_delta(int page_num, int speculative, long delta_seq[]){
    struct entry finds[n];
 
@@ -206,14 +217,17 @@ long update_delta_history_buffer(unsigned long index, unsigned long page_offset)
 }
 
 
-void a_update_opt(int offset, long delt){
+void update_opt(int offset, long delt){
+
+   if( offset < 0){
+      return;
+   }
    if ( OPT_prefetch[offset].delta == delt ){
       OPT_prefetch[offset].accuracy = 1;
    }
    else{
       if (OPT_prefetch[offset].accuracy == 0){
          OPT_prefetch[offset].delta = delt;
-         OPT_prefetch[offset].accuracy = 0;
       }
    }
 }
@@ -231,8 +245,6 @@ struct stupid VLDP_prefetch(unsigned long block_number){
       out.blocks[i] = block_number;
    }
 
-   //printf("block_number: %ld, delta: %ld\n", block_number, delta);
-
    if (delta == 0){
       return out;
    }
@@ -246,65 +258,41 @@ struct stupid VLDP_prefetch(unsigned long block_number){
    }
    else if (DHB[DHB_index].acceced == 2){
       int first_offset = (page_offset - delta) % opt_entry_num;
-      a_update_opt(first_offset, delta);
+      update_opt(first_offset, delta);
    }
-   else{
-      update_delta_prediction_tables(page_num, DHB[DHB_index].deltas);
-      //print_delta_prediction_tables();
-      //print_delta_prediction_tables();
-      
-      /*
-      printf("DHB: {");
-      for (int i = 0; i < 4; i++){
-         printf("%ld, ", DHB[DHB_index].deltas[i]);
+   update_delta_prediction_tables(page_num, DHB[DHB_index].deltas);
+
+   int counter = 0;
+
+   long new_seq[4]; 
+   long tmp[4]; 
+
+   for(int i = 0; i < 4; i++){
+      new_seq[i] = DHB[DHB_index].deltas[i+1];
+   }
+
+   delta = find_next_delta(page_num, 0, new_seq);
+
+   unsigned long current_block = block_number;
+
+   while ( (delta != 0) & ( counter < DEGREE)  ){
+      current_block += delta;
+      out.blocks[counter] = current_block;
+      delta = find_next_delta(page_num, 1, new_seq);
+
+      for(int i = 0; i < 3; i++){
+         tmp[i] = new_seq[i+1];
       }
-      */
-      //printf("}, prediction: %ld\n", delta);
-      /*
-      update_delta_prediction_tables(page_num, DHB[DHB_index].last_predictor, DHB[DHB_index].deltas);
-      print_delta_prediction_tables();
 
-      update_delta_prediction_tables(page_num, delta, DHB[DHB_index].deltas);
-      print_delta_prediction_tables();
-      printf("page num: %ld, {", page_num);
-      for (int i = 0; i < 4; i++){
-         printf("%ld, ", DHB[DHB_index].deltas[i]);
-      }
-      printf("}\n");
-      */
-
-      int counter = 0;
-
-      long new_seq[4]; 
-      long tmp[4]; 
+      tmp[3] = delta;
 
       for(int i = 0; i < 4; i++){
-         new_seq[i] = DHB[DHB_index].deltas[i+1];
+         new_seq[i] = tmp[i];
       }
-
-      delta = find_next_delta(page_num, 0, new_seq);
-
-      unsigned long current_block = block_number;
-
-      while ( (delta != 0) & ( counter < DEGREE)  ){
-         current_block += delta;
-         out.blocks[counter] = current_block;
-         delta = find_next_delta(page_num, 1, new_seq);
-
-         for(int i = 0; i < 3; i++){
-            tmp[i] = new_seq[i+1];
-         }
-
-         tmp[3] = delta;
-
-         for(int i = 0; i < 4; i++){
-            new_seq[i] = tmp[i];
-         }
-         counter++;
-      }
-
-      return out;
+      counter++;
    }
+
+   return out;
 
 }
 
